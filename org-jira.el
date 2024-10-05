@@ -1352,8 +1352,10 @@ ISSUES is a list of `org-jira-sdk-issue' records."
   (if jira-issue-id
       (kill-current-buffer)))
 
-(defun org-jira-comment-switch-account-id-strings-to-org-links (comment)
+(defun org-jira-comment-switch-account-id-strings-to-org-links (comment issue-id)
   ""
+  (unless jiralib-users-cache
+    (jiralib-get-users (org-jira-parse-jira-project-from-issue-id issue-id)))
   (with-temp-buffer
     (insert comment)
     (goto-char (point-min))
@@ -1576,7 +1578,7 @@ Expects input in format such as: [2017-04-05 Wed 01:00]--[2017-04-05 Wed 01:46] 
           (org-jira-entry-put (point) "updated" updated))
         (goto-char (point-max))
         ;;  Insert 2 spaces of indentation so Jira markup won't cause org-markup
-        (org-jira-insert (org-jira-comment-switch-account-id-strings-to-org-links (replace-regexp-in-string "^" "  " (or body ""))))))))
+        (org-jira-insert (org-jira-comment-switch-account-id-strings-to-org-links (replace-regexp-in-string "^" "  " (or body "")) (slot-value Issue 'id)))))))
 
 (defun org-jira-update-comments-for-issue (Issue)
   "Update the comments for the specified ISSUE issue."
