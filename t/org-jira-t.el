@@ -223,6 +223,32 @@ CLOCK:")))
   (should (string= "food and clean" (org-jira-strip-priority-tags "  [#C] [#D] food and clean ")))
   )
 
+(ert-deftest org-jira-test-org-jira-comment-switch-account-id-strings-to-org-links ()
+  (let ((jiralib-users-cache '(((accountId . "6413dda70e6828ab20251db3") (accountType . "atlassian")
+                                (emailAddress . "9fqcdw4cs7@privaterelay.appleid.com")
+                                (displayName . "Johnny O")) ((accountId . "557058:5aedf933-2312-40bc-b328-0c21314167f0") (accountType . "atlassian")
+                                (emailAddress . "9fqcdw4cs7@privaterelay.appleid.com")
+                                (displayName . "John Smith")))))
+    (should (string= "hello [[~accountid:6413dda70e6828ab20251db3][@Johnny O]]!" (org-jira-comment-switch-account-id-strings-to-org-links "hello [~accountid:6413dda70e6828ab20251db3]!")))
+    (should (string= "hello [[~accountid:557058:5aedf933-2312-40bc-b328-0c21314167f0][@John Smith]]!" (org-jira-comment-switch-account-id-strings-to-org-links "hello [~accountid:557058:5aedf933-2312-40bc-b328-0c21314167f0]!")))))
+
+(ert-deftest org-jira-test-org-jira-comment-switch-org-links-to-account-id ()
+  (let ((jiralib-users-cache '(((accountId . "6413dda70e6828ab20251db3") (accountType . "atlassian")
+                                (emailAddress . "9fqcdw4cs7@privaterelay.appleid.com")
+                                (displayName . "Johnny O")) ((accountId . "557058:5aedf933-2312-40bc-b328-0c21314167f0") (accountType . "atlassian")
+                                (emailAddress . "9fqcdw4cs7@privaterelay.appleid.com")
+                                (displayName . "John Smith"))))
+        (jira-comment-end-of-read-only (point-min)))
+    (with-temp-buffer
+      (insert "hello [[~accountid:6413dda70e6828ab20251db3][@Johnny O]]!")
+      (org-jira-comment-switch-org-links-to-account-id)
+      (should (string= "hello [~accountid:6413dda70e6828ab20251db3]!" (buffer-string))))
+    (with-temp-buffer
+      (insert "hello [[~accountid:557058:5aedf933-2312-40bc-b328-0c21314167f0][@John Smith]]!")
+      (org-jira-comment-switch-org-links-to-account-id)
+      (should (string= "hello [~accountid:557058:5aedf933-2312-40bc-b328-0c21314167f0]!" (buffer-string))))))
+
+
 
 (provide 'org-jira-t)
 ;;; org-jira-t.el ends here

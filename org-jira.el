@@ -1331,11 +1331,15 @@ ISSUES is a list of `org-jira-sdk-issue' records."
 (define-key org-jira-entry-mode-map (kbd "C-c C-k") #'org-jira-cancel-comment)
 (define-key org-jira-entry-mode-map (kbd "C-c C-c") #'org-jira-continue-with-comment)
 
+(defun org-jira-comment-switch-org-links-to-account-id ()
+  ""
+  (replace-regexp (rx "[" (group "[~accountid:" (+ (in alnum ?- ?:)) "]") "[" ?@ (+ (in alnum space)) "]]") "\\1" nil jira-comment-end-of-read-only (point-max)))
+
 (defun org-jira-continue-with-comment ()
   "continue with comment"
   (interactive)
   (font-lock-mode -1)
-  (replace-regexp (rx "[" (group "[~accountid:" (+ alnum) "]") "[" ?@ (+ (in alnum space)) "]]") "\\1" nil jira-comment-end-of-read-only (point-max))
+  (replace-regexp (rx "[" (group "[~accountid:" (+ (in alnum ?- ?:)) "]") "[" ?@ (+ (in alnum space)) "]]") "\\1" nil jira-comment-end-of-read-only (point-max))
   (let ((comment (substring (string-trim-right (buffer-string)) jira-comment-end-of-read-only))
         (jira-project jira-project)
         (jira-issue-id jira-issue-id))
@@ -1353,9 +1357,9 @@ ISSUES is a list of `org-jira-sdk-issue' records."
   (with-temp-buffer
     (insert comment)
     (goto-char (point-min))
-    (while (re-search-forward (rx (group "[" "~accountid:" (group (+ alnum)) "]")) nil t)
+    (while (re-search-forward (rx (group "[" "~accountid:" (group (+ (in alnum ?- ?:))) "]")) nil t)
       (message (format "match-string-0 %s, match-string-1 %s, match-string2 %s" (match-string 0) (match-string 1) (match-string 2)))
-      (replace-match (format "[%s[%s]]" (match-string 1) (jiralib-get-user-fullname (match-string 2)))))
+      (replace-match (format "[%s[@%s]]" (match-string 1) (jiralib-get-user-fullname (match-string 2)))))
     (buffer-string)))
 
 (defun org-jira-get-comment-from-comment-buffer (issue-id)
